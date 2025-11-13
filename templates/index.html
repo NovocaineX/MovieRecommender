@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎬 Movie Recommender</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* ---------- General Styles ---------- */
+    body {
+      background-color: #0d1117;
+      color: #e6edf3;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      color: #fff;
+      margin-top: 25px;
+      letter-spacing: 1px;
+    }
+
+    form {
+      margin-top: 20px;
+    }
+
+    input[type="text"], select {
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      width: 230px;
+      margin: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #ff0054;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #ff3366;
+    }
+
+    h2 {
+      margin-top: 30px;
+      color: #ffcc70;
+      font-size: 1.5em;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    /* ---------- Movie Cards ---------- */
+    .movies {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+      margin: 30px auto;
+      max-width: 1000px;
+    }
+
+    .movie-card {
+      background: #161b22;
+      border-radius: 15px;
+      width: 220px;
+      padding: 15px;
+      transition: 0.3s;
+      box-shadow: 0 3px 10px rgba(255,255,255,0.05);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    .movie-card:nth-child(odd) {
+      animation-delay: 0.2s;
+    }
+    .movie-card:nth-child(even) {
+      animation-delay: 0.4s;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+      background: #1b222c;
+      box-shadow: 0 0 15px rgba(255, 0, 84, 0.3);
+    }
+
+    .movie-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .movie-card h3 {
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .movie-card p {
+      font-size: 14px;
+      color: #9aa5b1;
+    }
+
+    /* ---------- About Section ---------- */
+    .about {
+      background: #161b22;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 40px auto;
+      max-width: 900px;
+      color: #c9d1d9;
+    }
+
+    .about h3 {
+      color: #58a6ff;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      border-top: 1px solid #30363d;
+      margin-top: 25px;
+      padding: 15px 0;
+      color: #8b949e;
+      font-size: 14px;
+    }
+
+    footer strong {
+      color: #ff0054;
+    }
+
+    /* ---------- Loader ---------- */
+    #loader {
+      display: none;
+      margin-top: 40px;
+    }
+
+    .spinner {
+      border: 5px solid #1f2937;
+      border-top: 5px solid #ff0054;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    /* ---------- Animations ---------- */
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    @keyframes fadeUp {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎥 Movie Recommender</h1>
+
+  <!-- Search + Genre Form -->
+  <form method="get" action="/" onsubmit="showLoader()">
+    <input type="text" name="movie" placeholder="Search any movie..." value="{{ request.args.get('movie', '') }}">
+    <select name="genre">
+      <option value="">-- Select Genre --</option>
+      <option value="Action" {% if genre == 'Action' %}selected{% endif %}>Action</option>
+      <option value="Comedy" {% if genre == 'Comedy' %}selected{% endif %}>Comedy</option>
+      <option value="Drama" {% if genre == 'Drama' %}selected{% endif %}>Drama</option>
+      <option value="Horror" {% if genre == 'Horror' %}selected{% endif %}>Horror</option>
+      <option value="Romance" {% if genre == 'Romance' %}selected{% endif %}>Romance</option>
+      <option value="Sci-Fi" {% if genre == 'Sci-Fi' %}selected{% endif %}>Sci-Fi</option>
+    </select>
+    <button type="submit">Show Movie</button>
+  </form>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>Fetching recommendations...</p>
+  </div>
+
+  <h2>{{ message }}</h2>
+
+  <!-- Movies Display -->
+  <div class="movies">
+    {% for movie in movies %}
+    <div class="movie-card">
+      <img src="{{ movie['Poster'] if movie['Poster'] != 'N/A' else url_for('static', filename='no-poster.png') }}" alt="Poster">
+      <h3>{{ movie['Title'] }}</h3>
+      <p>🎬 Year: {{ movie['Year'] }}</p>
+      <p>IMDb ID: {{ movie['imdbID'] }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- About Section -->
+  <div class="about">
+    <h3>📘 About This Project</h3>
+    <p>
+      This Flask web app uses the OMDb API to fetch real-time movie data.  
+      It recommends movies by genre or suggests similar ones dynamically.  
+     
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Project by <strong>Aadarsh</strong> (1/24/SET/BCS/531) & 
+    <strong>Lakshay Bhati</strong> (1/24/SET/BCS/522)
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    function showLoader() {
+      document.getElementById("loader").style.display = "block";
+    }
+  </script>
+</body>
+</html>
